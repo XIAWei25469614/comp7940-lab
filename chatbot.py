@@ -1,3 +1,5 @@
+from ChatGPT_HKBU import ChatGPT
+gpt = None
 '''
 This program requires the following modules:
 - python-telegram-bot==22.5
@@ -18,6 +20,10 @@ def main():
     config = configparser.ConfigParser()
     config.read('config.ini')
 
+    # Create a ChatGPT client object
+    global gpt
+    gpt = ChatGPT(config)
+
     # Create an Application for your bot
     logging.info('INIT: Connecting the Telegram bot...')
     app = ApplicationBuilder().token(config['TELEGRAM']['ACCESS_TOKEN']).build()
@@ -31,11 +37,15 @@ def main():
     app.run_polling()
 
 async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # await update.message.reply_text(response)
     logging.info("UPDATE: " + str(update))
+    loading_message = await update.message.reply_text('Thinking...')
 
-    # send the echo back to the client
-    text = update.message.text.upper()
-    await update.message.reply_text(text)
+    # send the user message to the ChatGPT client
+    response = gpt.submit(update.message.text)
+
+    # send the response to the Telegram box client
+    await loading_message.edit_text(response)
 
 if __name__ == '__main__':
     main()
